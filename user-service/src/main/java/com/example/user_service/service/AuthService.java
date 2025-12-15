@@ -1,6 +1,6 @@
 package com.example.user_service.service;
 
-import com.example.user_service.config.CustomUserDetails;
+import com.example.user_service.dto.RegisterRequest;
 import com.example.user_service.domain.Role;
 import com.example.user_service.domain.User;
 import com.example.user_service.dto.AuthRequest;
@@ -14,7 +14,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +24,17 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
 
+    public String registerUser(RegisterRequest request) {
+        User user = User.builder()
+                .fullName(request.getName())
+                .email(request.getEmail())
+                .passwordHash(passwordEncoder.encode(request.getPassword()))
+                .roles(Collections.singleton(Role.USER))
+                .build();
+        userRepository.save(user);
+        return "User registered successfully";
+    }
+
     public String saveUser(User user) {
         user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
         if (user.getRoles() == null || user.getRoles().isEmpty()) {
@@ -34,19 +44,21 @@ public class AuthService {
         return "User added to the system";
     }
 
-    public String generateToken(String username) {
-        return jwtUtil.generateToken(username);
-    }
-
     public void validateToken(String token) {
-        jwtUtil.validateToken(token, null); // Basic validation, username check requires extraction
+        jwtUtil.validateToken(token, null);
     }
 
     public String login(AuthRequest authRequest) {
         Authentication authenticate = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword()));
         if (authenticate.isAuthenticated()) {
-            return generateToken(authRequest.getEmail());
+            User user = userRepository.findByEmail(authRequest.getEmail())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            String roles = user.getRoles().stream()
+                    .map(Enum::name)
+                    .reduce((a, b) -> a + "," + b)
+                    .orElse("USER");
+            return jwtUtil.generateToken(authRequest.getEmail(), user.getId(), roles);
         } else {
             throw new RuntimeException("invalid access");
         }

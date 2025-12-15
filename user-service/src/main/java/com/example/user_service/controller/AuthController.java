@@ -1,6 +1,6 @@
 package com.example.user_service.controller;
 
-import com.example.user_service.domain.User;
+import com.example.user_service.dto.RegisterRequest;
 import com.example.user_service.dto.AuthRequest;
 import com.example.user_service.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -13,10 +13,13 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("/register")
-    public String addNewUser(@RequestBody User user) {
-        return authService.saveUser(user);
-    }
+    // Public registration disabled - users must be created by admin
+    /*
+     * @PostMapping("/register")
+     * public String register(@RequestBody RegisterRequest request) {
+     * return authService.registerUser(request);
+     * }
+     */
 
     @PostMapping("/login")
     public String getToken(@RequestBody AuthRequest authRequest) {

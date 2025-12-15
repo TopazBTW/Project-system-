@@ -8,4 +8,5 @@ public class BookDto {
     private String title;
     private Integer stock;
     private boolean active;
+    private AuthorDto author;
 }

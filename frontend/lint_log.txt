@@ -1,0 +1,19 @@
+
+C:\Users\LENOVO\Desktop\Repos\Project-system-\frontend\src\AdminDashboard.jsx
+   24:8   warning  React Hook useEffect has missing dependencies: 'fetchLoans' and 'fetchUsers'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+   84:18  error    'err' is defined but never used                                                                                                   no-unused-vars
+  105:18  error    'err' is defined but never used                                                                                                   no-unused-vars
+  121:18  error    'err' is defined but never used                                                                                                   no-unused-vars
+
+C:\Users\LENOVO\Desktop\Repos\Project-system-\frontend\src\App.jsx
+  31:14  error  'e' is defined but never used  no-unused-vars
+
+C:\Users\LENOVO\Desktop\Repos\Project-system-\frontend\src\BookCatalog.jsx
+  16:8  warning  React Hook useEffect has a missing dependency: 'fetchBooks'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\LENOVO\Desktop\Repos\Project-system-\frontend\src\Profile.jsx
+  13:8   warning  React Hook useEffect has a missing dependency: 'fetchLoans'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  47:11  error    'isOverdue' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                      no-unused-vars
+
+✖ 8 problems (5 errors, 3 warnings)
+

@@ -20,6 +20,18 @@ public class BookController {
         return bookService.findAll();
     }
 
+    @GetMapping("/search")
+    public List<Book> searchBooks(@RequestParam String query) {
+        return bookService.searchByTitleOrAuthor(query);
+    }
+
+    @GetMapping("/filter")
+    public List<Book> filterBooks(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Boolean available) {
+        return bookService.filterBooks(category, available);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Book> getBookById(@PathVariable Long id) {
         return ResponseEntity.ok(bookService.findById(id));
@@ -46,5 +58,10 @@ public class BookController {
     public ResponseEntity<Void> increaseStock(@PathVariable Long id) {
         bookService.increaseStock(id);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<List<Book>> importBooks(@RequestParam String query) {
+        return ResponseEntity.ok(bookService.importBooks(query));
     }
 }
