@@ -14,12 +14,10 @@ public class AuthController {
     private final AuthService authService;
 
     // Public registration disabled - users must be created by admin
-    /*
-     * @PostMapping("/register")
-     * public String register(@RequestBody RegisterRequest request) {
-     * return authService.registerUser(request);
-     * }
-     */
+    @PostMapping("/register")
+    public String register(@RequestBody RegisterRequest request) {
+        return authService.registerUser(request);
+    }
 
     @PostMapping("/login")
     public String getToken(@RequestBody AuthRequest authRequest) {

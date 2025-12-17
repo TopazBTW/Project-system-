@@ -97,6 +97,20 @@ services:
     networks:
       - library-network
 
+  recommendation-service:
+    build: ./recommendation-service
+    container_name: recommendation-service
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+    depends_on:
+      - discovery-service
+      - catalog-service
+    networks:
+      - library-network
+
 networks:
   library-network:
     driver: bridge

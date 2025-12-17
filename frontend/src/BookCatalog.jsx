@@ -4,6 +4,7 @@ import './BookCatalog.css';
 
 const BookCatalog = ({ token, userId }) => {
     const [books, setBooks] = useState([]);
+    const [activeLoans, setActiveLoans] = useState(new Set());
     const [searchQuery, setSearchQuery] = useState('');
     const [category, setCategory] = useState('');
     const [availableOnly, setAvailableOnly] = useState(false);
@@ -13,7 +14,24 @@ const BookCatalog = ({ token, userId }) => {
 
     useEffect(() => {
         fetchBooks();
-    }, [searchQuery, category, availableOnly]);
+        if (userId) {
+            fetchActiveLoans();
+        }
+    }, [searchQuery, category, availableOnly, userId]);
+
+    const fetchActiveLoans = async () => {
+        try {
+            const response = await axios.get(`http://localhost:8080/api/loans/user/${userId}/active`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (Array.isArray(response.data)) {
+                const loanBookIds = new Set(response.data.map(loan => loan.bookId));
+                setActiveLoans(loanBookIds);
+            }
+        } catch (err) {
+            console.error("Failed to fetch active loans", err);
+        }
+    };
 
     const fetchBooks = async () => {
         setLoading(true);
@@ -58,6 +76,7 @@ const BookCatalog = ({ token, userId }) => {
             setMessage('Book borrowed successfully!');
             setTimeout(() => setMessage(''), 3000);
             fetchBooks(); // Refresh to show updated stock
+            fetchActiveLoans(); // Refresh to show updated loan status
         } catch (err) {
             const errorMessage = err.response?.data?.message || err.response?.data?.error || 'Failed to borrow book';
             setError(typeof errorMessage === 'object' ? JSON.stringify(errorMessage) : errorMessage);
@@ -158,9 +177,9 @@ const BookCatalog = ({ token, userId }) => {
                                 <button
                                     className="borrow-btn"
                                     onClick={() => handleBorrow(book.id)}
-                                    disabled={book.stock <= 0}
+                                    disabled={book.stock <= 0 || activeLoans.has(book.id)}
                                 >
-                                    {book.stock > 0 ? 'Borrow Book' : 'Unavailable'}
+                                    {activeLoans.has(book.id) ? 'Already Borrowed' : (book.stock > 0 ? 'Borrow Book' : 'Unavailable')}
                                 </button>
                             </div>
                         ))
