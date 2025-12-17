@@ -46,7 +46,18 @@ public class OpenLibraryService {
                     continue; // Skip books without ISBN
 
                 // Check if book already exists
-                if (bookRepository.findByIsbn(isbn).isPresent()) {
+                Optional<Book> existingBook = bookRepository.findByIsbn(isbn);
+                if (existingBook.isPresent()) {
+                    Book book = existingBook.get();
+                    if (!book.isActive()) {
+                        book.setActive(true);
+                        book.setStock(5); // Reset stock or keep? Let's reset to default for import
+                        Book savedBook = bookRepository.save(book);
+                        System.out.println("Reactivated book: " + savedBook.getTitle());
+                        importedBooks.add(savedBook);
+                    } else {
+                        System.out.println("Book already exists and is active: " + book.getTitle());
+                    }
                     continue;
                 }
 
@@ -68,8 +79,11 @@ public class OpenLibraryService {
                 book.setStock(5); // Default stock
                 book.setTotalCopies(5); // Default total copies
                 book.setCategory("General"); // Default category need better mapping potentially
+                book.setActive(true); // Explicitly set active
 
-                importedBooks.add(bookRepository.save(book));
+                Book savedBook = bookRepository.save(book);
+                System.out.println("Saved new book: " + savedBook.getTitle() + " (ID: " + savedBook.getId() + ")");
+                importedBooks.add(savedBook);
             }
 
         } catch (Exception e) {

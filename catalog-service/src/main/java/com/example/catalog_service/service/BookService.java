@@ -14,12 +14,14 @@ import java.util.stream.Collectors;
 public class BookService {
 
     private final BookRepository bookRepository;
+    private final com.example.catalog_service.repository.AuthorRepository authorRepository;
     private final OpenLibraryService openLibraryService;
 
     public List<Book> findAll() {
-        return bookRepository.findAll();
+        return bookRepository.findByActiveTrue();
     }
 
+    // ... (searchByTitleOrAuthor and filterBooks remain same)
     public List<Book> searchByTitleOrAuthor(String query) {
         if (query == null || query.trim().isEmpty()) {
             return findAll();
@@ -58,6 +60,18 @@ public class BookService {
 
     @Transactional
     public Book save(Book book) {
+        if (book.getAuthor() != null) {
+            com.example.catalog_service.domain.Author author = book.getAuthor();
+            if (author.getId() == null) {
+                // Try to find by name
+                com.example.catalog_service.domain.Author existingAuthor = authorRepository.findByName(author.getName())
+                        .orElseGet(() -> {
+                            author.setNationality("Unknown"); // Default
+                            return authorRepository.save(author);
+                        });
+                book.setAuthor(existingAuthor);
+            }
+        }
         return bookRepository.save(book);
     }
 

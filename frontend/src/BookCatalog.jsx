@@ -12,12 +12,28 @@ const BookCatalog = ({ token, userId }) => {
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
 
+    const [recommendations, setRecommendations] = useState([]);
+
     useEffect(() => {
         fetchBooks();
         if (userId) {
             fetchActiveLoans();
+            fetchRecommendations();
         }
     }, [searchQuery, category, availableOnly, userId]);
+
+    const fetchRecommendations = async () => {
+        try {
+            const response = await axios.get('http://localhost:8080/recommendation-service/recommendations', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (Array.isArray(response.data)) {
+                setRecommendations(response.data);
+            }
+        } catch (err) {
+            console.error("Failed to fetch recommendations", err);
+        }
+    };
 
     const fetchActiveLoans = async () => {
         try {
@@ -90,6 +106,51 @@ const BookCatalog = ({ token, userId }) => {
                 <h1>Library Catalog</h1>
                 <p>Discover your next great read</p>
             </div>
+
+            {recommendations.length > 0 && (
+                <div className="recommendations-section">
+                    <h2>Recommended for You</h2>
+                    <div className="books-grid">
+                        {recommendations.map((book) => (
+                            <div key={`rec-${book.id}`} className="book-card recommendation-card">
+                                <div className="book-card-content">
+                                    <div className="book-cover">
+                                        {book.isbn ? (
+                                            <img
+                                                src={`https://covers.openlibrary.org/b/isbn/${book.isbn}-L.jpg`}
+                                                alt={book.title}
+                                                onError={(e) => {
+                                                    e.target.onerror = null;
+                                                    e.target.src = 'https://via.placeholder.com/150x220?text=No+Cover';
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="no-cover">
+                                                <span>{book.title[0]}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="book-info">
+                                        <div className="book-card-header">
+                                            <h3 className="book-title">{book.title}</h3>
+                                        </div>
+                                        <div className="book-details">
+                                            <p className="book-author">{book.author?.name || 'Unknown'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    className="borrow-btn"
+                                    onClick={() => handleBorrow(book.id)}
+                                    disabled={book.stock <= 0 || activeLoans.has(book.id)}
+                                >
+                                    {activeLoans.has(book.id) ? 'Already Borrowed' : (book.stock > 0 ? 'Borrow' : 'Unavailable')}
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             <div className="filters-container">
                 <div className="search-bar">

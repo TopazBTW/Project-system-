@@ -11,6 +11,15 @@ const AdminDashboard = ({ token }) => {
     const [error, setError] = useState('');
     const [showCreateUser, setShowCreateUser] = useState(false);
     const [newUser, setNewUser] = useState({ name: '', email: '', password: '' });
+    const [newBook, setNewBook] = useState({
+        title: '',
+        authorName: '',
+        isbn: '',
+        category: '',
+        stock: 5,
+        totalCopies: 5,
+        publicationYear: new Date().getFullYear()
+    });
 
     // Fetch data when tab changes
     useEffect(() => {
@@ -108,15 +117,47 @@ const AdminDashboard = ({ token }) => {
         }
     };
 
+    const handleManualAdd = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const payload = {
+                title: newBook.title,
+                author: { name: newBook.authorName },
+                isbn: newBook.isbn,
+                category: newBook.category,
+                stock: parseInt(newBook.stock),
+                totalCopies: parseInt(newBook.totalCopies),
+                publicationYear: parseInt(newBook.publicationYear)
+            };
+            await axios.post('http://localhost:8080/api/books', payload, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setMessage(`Successfully added "${newBook.title}"`);
+            setNewBook({ title: '', authorName: '', isbn: '', category: '', stock: 5, totalCopies: 5, publicationYear: new Date().getFullYear() });
+            setTimeout(() => setMessage(''), 3000);
+        } catch (err) {
+            setError('Failed to add book');
+            setTimeout(() => setError(''), 3000);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleImportBooks = async () => {
         const query = document.getElementById('importQuery').value;
         if (!query) return;
         setLoading(true);
         try {
-            await axios.post(`http://localhost:8080/api/books/import?query=${encodeURIComponent(query)}`, {}, {
+            const response = await axios.post(`http://localhost:8080/api/books/import?query=${encodeURIComponent(query)}`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setMessage(`Successfully imported books for "${query}"`);
+            const importedCount = response.data.length;
+            if (importedCount > 0) {
+                setMessage(`Successfully imported ${importedCount} books for "${query}"`);
+            } else {
+                setMessage(`No new books found for "${query}"`);
+            }
             setTimeout(() => setMessage(''), 3000);
         } catch {
             setError('Failed to import books');
@@ -259,7 +300,7 @@ const AdminDashboard = ({ token }) => {
                         <h2>Book Management</h2>
                     </div>
 
-                    <div className="section-content">
+                    <div className="section-content" style={{ marginBottom: '30px' }}>
                         <h3>Import Books</h3>
                         <p style={{ fontSize: '14px', color: '#718096', marginBottom: '15px' }}>
                             Import metadata and covers from OpenLibrary API.
@@ -280,6 +321,67 @@ const AdminDashboard = ({ token }) => {
                                 {loading ? 'Importing...' : 'Import Books'}
                             </button>
                         </div>
+                    </div>
+
+                    <div className="section-content">
+                        <h3>Add Book Manually</h3>
+                        <form onSubmit={handleManualAdd} className="create-user-form">
+                            <input
+                                type="text"
+                                placeholder="Title"
+                                value={newBook.title}
+                                onChange={(e) => setNewBook({ ...newBook, title: e.target.value })}
+                                required
+                            />
+                            <input
+                                type="text"
+                                placeholder="Author Name"
+                                value={newBook.authorName}
+                                onChange={(e) => setNewBook({ ...newBook, authorName: e.target.value })}
+                                required
+                            />
+                            <input
+                                type="text"
+                                placeholder="ISBN"
+                                value={newBook.isbn}
+                                onChange={(e) => setNewBook({ ...newBook, isbn: e.target.value })}
+                                required
+                            />
+                            <input
+                                type="text"
+                                placeholder="Category"
+                                value={newBook.category}
+                                onChange={(e) => setNewBook({ ...newBook, category: e.target.value })}
+                            />
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <input
+                                    type="number"
+                                    placeholder="Stock"
+                                    value={newBook.stock}
+                                    onChange={(e) => setNewBook({ ...newBook, stock: e.target.value })}
+                                    required
+                                    style={{ flex: 1 }}
+                                />
+                                <input
+                                    type="number"
+                                    placeholder="Total Copies"
+                                    value={newBook.totalCopies}
+                                    onChange={(e) => setNewBook({ ...newBook, totalCopies: e.target.value })}
+                                    required
+                                    style={{ flex: 1 }}
+                                />
+                                <input
+                                    type="number"
+                                    placeholder="Year"
+                                    value={newBook.publicationYear}
+                                    onChange={(e) => setNewBook({ ...newBook, publicationYear: e.target.value })}
+                                    style={{ flex: 1 }}
+                                />
+                            </div>
+                            <button type="submit" className="submit-btn" disabled={loading}>
+                                {loading ? 'Adding...' : 'Add Book'}
+                            </button>
+                        </form>
                     </div>
                 </div>
             )}
